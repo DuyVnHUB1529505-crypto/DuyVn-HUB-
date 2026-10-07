@@ -1,0 +1,257 @@
+--// DUYVN HUB
+--// SERVER HOP 1 PLAYER + ULTRA LOW GRAPHICS
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+
+local LP = Players.LocalPlayer
+local PlaceId = game.PlaceId
+
+pcall(function()
+    local old = CoreGui:FindFirstChild("DuyVn_HUB")
+    if old then old:Destroy() end
+end)
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "DuyVn_HUB"
+Gui.ResetOnSpawn = false
+Gui.Parent = CoreGui
+
+-- NÚT MENU
+local Open = Instance.new("TextButton")
+Open.Size = UDim2.fromOffset(58,58)
+Open.Position = UDim2.new(0,12,0.5,-29)
+Open.BackgroundColor3 = Color3.fromRGB(255,20,147)
+Open.Text = "Duy"
+Open.TextColor3 = Color3.new(1,1,1)
+Open.Font = Enum.Font.GothamBold
+Open.TextSize = 15
+Open.Parent = Gui
+Instance.new("UICorner",Open).CornerRadius = UDim.new(1,0)
+
+-- MENU
+local Main = Instance.new("Frame")
+Main.Size = UDim2.fromOffset(285,235)
+Main.Position = UDim2.new(.5,-142,.5,-117)
+Main.BackgroundColor3 = Color3.fromRGB(255,105,180)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+Main.Parent = Gui
+Instance.new("UICorner",Main).CornerRadius = UDim.new(0,16)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,0,0,42)
+Title.BackgroundTransparency = 1
+Title.Text = "💗 DuyVn HUB"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.Parent = Main
+
+-- HOP
+local Hop = Instance.new("TextButton")
+Hop.Size = UDim2.new(1,-20,0,48)
+Hop.Position = UDim2.fromOffset(10,50)
+Hop.BackgroundColor3 = Color3.fromRGB(255,20,147)
+Hop.Text = "👤 HOP SERVER 1 NGƯỜI"
+Hop.TextColor3 = Color3.new(1,1,1)
+Hop.Font = Enum.Font.GothamBold
+Hop.TextSize = 14
+Hop.Parent = Main
+Instance.new("UICorner",Hop).CornerRadius = UDim.new(0,10)
+
+-- GRAPHICS
+local GFX = Instance.new("TextButton")
+GFX.Size = UDim2.new(1,-20,0,48)
+GFX.Position = UDim2.fromOffset(10,105)
+GFX.BackgroundColor3 = Color3.fromRGB(50,180,60)
+GFX.Text = "⛏️ ULTRA LOW GRAPHICS: OFF"
+GFX.TextColor3 = Color3.new(1,1,1)
+GFX.Font = Enum.Font.GothamBold
+GFX.TextSize = 14
+GFX.Parent = Main
+Instance.new("UICorner",GFX).CornerRadius = UDim.new(0,10)
+
+local Status = Instance.new("TextLabel")
+Status.Size = UDim2.new(1,-20,0,50)
+Status.Position = UDim2.fromOffset(10,160)
+Status.BackgroundTransparency = 1
+Status.Text = "⚡ Sẵn sàng"
+Status.TextColor3 = Color3.new(1,1,1)
+Status.Font = Enum.Font.Gotham
+Status.TextSize = 13
+Status.Parent = Main
+
+-- ẨN / HIỆN MENU
+local Showing = true
+
+Open.MouseButton1Click:Connect(function()
+    Showing = not Showing
+    Main.Visible = Showing
+    Open.Text = Showing and "Duy" or "☰"
+end)
+
+-- SERVER HOP ĐÚNG 1 NGƯỜI
+local function HopServer()
+    Hop.Text = "🔎 ĐANG TÌM..."
+    Status.Text = "🔎 Tìm server có đúng 1 người..."
+
+    local success, result = pcall(function()
+        return HttpService:JSONDecode(
+            game:HttpGet(
+                "https://games.roblox.com/v1/games/"
+                ..PlaceId..
+                "/servers/Public?sortOrder=Asc&limit=100"
+            )
+        )
+    end)
+
+    if not success or not result or not result.data then
+        Hop.Text = "❌ LỖI"
+        Status.Text = "Không lấy được server"
+        task.wait(2)
+        Hop.Text = "👤 HOP SERVER 1 NGƯỜI"
+        Status.Text = "⚡ Sẵn sàng"
+        return
+    end
+
+    local list = {}
+
+    for _,server in ipairs(result.data) do
+        if server.id ~= game.JobId
+        and server.playing == 1
+        and server.playing < server.maxPlayers then
+            table.insert(list,server)
+        end
+    end
+
+    if #list == 0 then
+        Hop.Text = "❌ KHÔNG CÓ"
+        Status.Text = "Không tìm thấy server 1 người"
+        task.wait(2)
+        Hop.Text = "👤 HOP SERVER 1 NGƯỜI"
+        Status.Text = "⚡ Sẵn sàng"
+        return
+    end
+
+    local target = list[math.random(1,#list)]
+
+    Hop.Text = "🚀 ĐANG HOP..."
+    Status.Text = "🚀 Đang vào server 1 người"
+
+    TeleportService:TeleportToPlaceInstance(
+        PlaceId,
+        target.id,
+        LP
+    )
+end
+
+Hop.MouseButton1Click:Connect(HopServer)
+
+-- ULTRA LOW GRAPHICS
+local Ultra = false
+
+local function UltraLowGraphics()
+
+    -- ÁNH SÁNG
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 1000000
+        Lighting.Brightness = 1
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+    end)
+
+    -- TẮT TOÀN BỘ POST EFFECT
+    for _,v in ipairs(Lighting:GetDescendants()) do
+        if v:IsA("PostEffect")
+        or v:IsA("Atmosphere")
+        or v:IsA("Clouds") then
+            pcall(function()
+                v.Enabled = false
+            end)
+        end
+    end
+
+    -- GIẢM MẠNH OBJECT
+    for _,v in ipairs(Workspace:GetDescendants()) do
+
+        if v:IsA("ParticleEmitter")
+        or v:IsA("Trail")
+        or v:IsA("Beam")
+        or v:IsA("Smoke")
+        or v:IsA("Fire")
+        or v:IsA("Sparkles") then
+
+            pcall(function()
+                v.Enabled = false
+            end)
+
+        elseif v:IsA("BasePart") then
+
+            pcall(function()
+                v.CastShadow = false
+                v.Reflectance = 0
+                v.Material = Enum.Material.Plastic
+            end)
+
+        elseif v:IsA("Decal")
+        or v:IsA("Texture") then
+
+            pcall(function()
+                v.Transparency = 1
+            end)
+
+        elseif v:IsA("SurfaceAppearance") then
+
+            pcall(function()
+                v:Destroy()
+            end)
+        end
+    end
+
+    -- TERRAIN
+    pcall(function()
+        local T = Workspace.Terrain
+        T.Decoration = false
+        T.WaterWaveSize = 0
+        T.WaterWaveSpeed = 0
+        T.WaterReflectance = 0
+        T.WaterTransparency = 1
+    end)
+
+    -- QUALITY THẤP NHẤT
+    pcall(function()
+        settings().Rendering.QualityLevel =
+            Enum.QualityLevel.Level01
+    end)
+
+    -- GIẢM DETAIL MESH
+    pcall(function()
+        settings().Rendering.MeshPartDetailLevel =
+            Enum.MeshPartDetailLevel.Level01
+    end)
+
+    Status.Text = "⛏️ ULTRA LOW GRAPHICS: ON"
+end
+
+GFX.MouseButton1Click:Connect(function()
+    Ultra = not Ultra
+
+    if Ultra then
+        GFX.Text = "⛏️ ULTRA LOW GRAPHICS: ON"
+        GFX.BackgroundColor3 = Color3.fromRGB(20,230,60)
+        UltraLowGraphics()
+    else
+        GFX.Text = "⛏️ ULTRA LOW GRAPHICS: OFF"
+        GFX.BackgroundColor3 = Color3.fromRGB(50,180,60)
+        Status.Text = "⚡ Đã tắt chế độ"
+    end
+end)
+
+print("💗 DuyVn HUB loaded")
