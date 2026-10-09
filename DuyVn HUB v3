@@ -1,0 +1,507 @@
+
+--==================================================
+-- DUYVN HUB v3 | PINK EDITION
+-- SERVER HOP + SERVER LIST + REJOIN + FIX LAG
+--==================================================
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local UIS = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+local PlaceId = game.PlaceId
+
+if not Player then return end
+
+local Pink = Color3.fromRGB(255, 65, 165)
+local LightPink = Color3.fromRGB(255, 185, 225)
+local Dark = Color3.fromRGB(30, 12, 25)
+local ButtonColor = Color3.fromRGB(150, 25, 90)
+local White = Color3.fromRGB(255, 245, 250)
+
+-- XÓA GUI CŨ
+local function removeOld()
+    for _, parent in ipairs({
+        game:GetService("CoreGui"),
+        Player:WaitForChild("PlayerGui")
+    }) do
+        pcall(function()
+            local old = parent:FindFirstChild("DuyVn_HUB_v3")
+            if old then old:Destroy() end
+        end)
+    end
+end
+removeOld()
+
+-- GUI
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "DuyVn_HUB_v3"
+Gui.ResetOnSpawn = false
+Gui.DisplayOrder = 999
+
+local ok = pcall(function()
+    Gui.Parent = game:GetService("CoreGui")
+end)
+if not ok or not Gui.Parent then
+    Gui.Parent = Player:WaitForChild("PlayerGui")
+end
+
+-- NÚT DV
+local Toggle = Instance.new("TextButton")
+Toggle.Name = "DVToggle"
+Toggle.Size = UDim2.fromOffset(56, 56)
+Toggle.Position = UDim2.new(0, 12, 0.5, -28)
+Toggle.BackgroundColor3 = Pink
+Toggle.Text = "DV"
+Toggle.TextColor3 = White
+Toggle.TextSize = 21
+Toggle.Font = Enum.Font.GothamBold
+Toggle.Active = true
+Toggle.Parent = Gui
+
+Instance.new("UICorner", Toggle).CornerRadius = UDim.new(1, 0)
+
+local outline = Instance.new("UIStroke", Toggle)
+outline.Color = LightPink
+outline.Thickness = 3
+
+-- MENU CHÍNH
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.Size = UDim2.new(0.94, 0, 0.78, 0)
+Main.BackgroundColor3 = Dark
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Parent = Gui
+
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 20)
+
+local border = Instance.new("UIStroke", Main)
+border.Color = Pink
+border.Thickness = 3
+
+local limit = Instance.new("UISizeConstraint", Main)
+limit.MinSize = Vector2.new(320, 300)
+limit.MaxSize = Vector2.new(1000, 680)
+
+-- BẢNG TRÁI
+local Left = Instance.new("Frame")
+Left.Size = UDim2.new(0.35, 0, 1, 0)
+Left.BackgroundColor3 = Color3.fromRGB(48, 15, 37)
+Left.BorderSizePixel = 0
+Left.Parent = Main
+
+Instance.new("UICorner", Left).CornerRadius = UDim.new(0, 18)
+
+local function makeLabel(parent, text, pos, size, textSize)
+    local L = Instance.new("TextLabel")
+    L.Position = pos
+    L.Size = size
+    L.BackgroundTransparency = 1
+    L.Text = text
+    L.TextColor3 = LightPink
+    L.TextSize = textSize
+    L.TextWrapped = true
+    L.Font = Enum.Font.GothamBold
+    L.Parent = parent
+    return L
+end
+
+makeLabel(Left, "🎀 DUYVN HUB v3",
+    UDim2.new(0.04, 0, 0, 12),
+    UDim2.new(0.92, 0, 0, 35), 15)
+
+local Info = makeLabel(Left, "💗 PINK EDITION\nServer Hop • Fix Lag",
+    UDim2.new(0.06, 0, 0, 57),
+    UDim2.new(0.88, 0, 0, 65), 13)
+Info.BackgroundColor3 = ButtonColor
+Info.BackgroundTransparency = 0
+Instance.new("UICorner", Info).CornerRadius = UDim.new(0, 10)
+
+makeLabel(Left, "🛠 QUICK UTILITIES",
+    UDim2.new(0.04, 0, 0, 135),
+    UDim2.new(0.92, 0, 0, 30), 13)
+
+local Status = makeLabel(Left, "DUYVN HUB v3 READY",
+    UDim2.new(0.05, 0, 1, -58),
+    UDim2.new(0.90, 0, 0, 48), 11)
+Status.BackgroundColor3 = ButtonColor
+Status.BackgroundTransparency = 0
+Instance.new("UICorner", Status).CornerRadius = UDim.new(0, 10)
+
+local function setStatus(text)
+    Status.Text = text
+end
+
+local function button(parent, name, text, pos, size)
+    local B = Instance.new("TextButton")
+    B.Name = name
+    B.Position = pos
+    B.Size = size
+    B.BackgroundColor3 = ButtonColor
+    B.BorderSizePixel = 0
+    B.Text = text
+    B.TextColor3 = White
+    B.TextSize = 12
+    B.TextWrapped = true
+    B.Font = Enum.Font.GothamBold
+    B.Parent = parent
+    Instance.new("UICorner", B).CornerRadius = UDim.new(0, 10)
+    return B
+end
+
+local FixLag = button(Left, "FixLag", "⚡ FIX LAG: OFF",
+    UDim2.new(0.06, 0, 0, 175),
+    UDim2.new(0.88, 0, 0, 44))
+
+local Rejoin = button(Left, "Rejoin", "🔄 REJOIN CURRENT SERVER",
+    UDim2.new(0.06, 0, 0, 229),
+    UDim2.new(0.88, 0, 0, 44))
+
+-- BẢNG PHẢI
+local Right = Instance.new("Frame")
+Right.Position = UDim2.new(0.35, 0, 0, 0)
+Right.Size = UDim2.new(0.65, 0, 1, 0)
+Right.BackgroundTransparency = 1
+Right.Parent = Main
+
+makeLabel(Right, "🎀 DuyVn HUB v3",
+    UDim2.new(0.04, 0, 0, 8),
+    UDim2.new(0.78, 0, 0, 34), 19)
+
+makeLabel(Right, "SERVERHOP V3 | PINK EDITION",
+    UDim2.new(0.04, 0, 0, 40),
+    UDim2.new(0.90, 0, 0, 25), 10)
+
+local Close = button(Right, "Close", "X",
+    UDim2.new(1, -39, 0, 8),
+    UDim2.fromOffset(30, 30))
+
+local Load = button(Right, "LoadServers", "🔄 LOAD 1-PLAYER SERVERS",
+    UDim2.new(0.04, 0, 0, 75),
+    UDim2.new(0.48, 0, 0, 42))
+
+local Filter = button(Right, "Filter", "👤 1 PLAYER: ON",
+    UDim2.new(0.54, 0, 0, 75),
+    UDim2.new(0.42, 0, 0, 42))
+
+local List = Instance.new("ScrollingFrame")
+List.Name = "ServerList"
+List.Position = UDim2.new(0.04, 0, 0, 128)
+List.Size = UDim2.new(0.92, 0, 1, -140)
+List.BackgroundColor3 = Color3.fromRGB(22, 25, 23)
+List.BorderSizePixel = 0
+List.ScrollBarThickness = 5
+List.ScrollBarImageColor3 = Pink
+List.AutomaticCanvasSize = Enum.AutomaticSize.Y
+List.CanvasSize = UDim2.new(0, 0, 0, 0)
+List.Parent = Right
+
+Instance.new("UICorner", List).CornerRadius = UDim.new(0, 10)
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 7)
+Layout.SortOrder = Enum.SortOrder.LayoutOrder
+Layout.Parent = List
+
+local Padding = Instance.new("UIPadding")
+Padding.PaddingTop = UDim.new(0, 7)
+Padding.PaddingLeft = UDim.new(0, 7)
+Padding.PaddingRight = UDim.new(0, 7)
+Padding.Parent = List
+
+-- NÚT DV KÉO ĐƯỢC
+local dragging = false
+local moved = false
+local startInput
+local startPos
+local activeInput
+
+Toggle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+        or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        moved = false
+        startInput = input.Position
+        startPos = Toggle.Position
+        activeInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if not dragging then return end
+
+    local isTouch = input.UserInputType == Enum.UserInputType.Touch
+        and activeInput == input
+    local isMouse = input.UserInputType == Enum.UserInputType.MouseMovement
+        and activeInput
+        and activeInput.UserInputType == Enum.UserInputType.MouseButton1
+
+    if isTouch or isMouse then
+        local delta = input.Position - startInput
+        if math.abs(delta.X) > 5 or math.abs(delta.Y) > 5 then
+            moved = true
+        end
+        Toggle.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+        or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+Toggle.Activated:Connect(function()
+    if moved then
+        moved = false
+        return
+    end
+    Main.Visible = not Main.Visible
+end)
+
+Close.Activated:Connect(function()
+    Main.Visible = false
+end)
+
+-- SERVER LIST
+local onlyOne = true
+local loading = false
+local teleporting = false
+
+local function clearList()
+    for _, child in ipairs(List:GetChildren()) do
+        if child:IsA("Frame") or child:IsA("TextLabel") then
+            child:Destroy()
+        end
+    end
+end
+
+local function addServer(server)
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, -4, 0, 58)
+    Row.BackgroundColor3 = Color3.fromRGB(40, 48, 41)
+    Row.BorderSizePixel = 0
+    Row.Parent = List
+    Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 10)
+
+    local Details = Instance.new("TextLabel")
+    Details.Position = UDim2.new(0, 8, 0, 0)
+    Details.Size = UDim2.new(0.65, 0, 1, 0)
+    Details.BackgroundTransparency = 1
+    Details.Text = "👥 Players: " .. server.playing
+        .. "/" .. server.maxPlayers
+    Details.TextColor3 = LightPink
+    Details.TextSize = 12
+    Details.TextWrapped = true
+    Details.TextXAlignment = Enum.TextXAlignment.Left
+    Details.Font = Enum.Font.GothamBold
+    Details.Parent = Row
+
+    local Join = button(Row, "Join", "JOIN",
+        UDim2.new(0.70, 0, 0.5, -18),
+        UDim2.new(0.26, 0, 0, 36))
+    Join.BackgroundColor3 = Color3.fromRGB(25, 150, 90)
+
+    Join.Activated:Connect(function()
+        if teleporting then return end
+        teleporting = true
+        setStatus("Dang vao server...")
+        local success, err = pcall(function()
+            TeleportService:TeleportToPlaceInstance(
+                PlaceId, server.id, Player)
+        end)
+        if not success then
+            teleporting = false
+            setStatus("JOIN loi: " .. tostring(err))
+        end
+    end)
+end
+
+Filter.Activated:Connect(function()
+    onlyOne = not onlyOne
+    Filter.Text = onlyOne and "👤 1 PLAYER: ON"
+        or "👥 SHOW ALL SERVERS"
+    setStatus(onlyOne and "Loc server 1 nguoi"
+        or "Hien tat ca server con cho")
+end)
+
+local function loadServers()
+    if loading then return end
+    loading = true
+    clearList()
+    setStatus("Dang tai danh sach server...")
+
+    task.spawn(function()
+        local success, err = pcall(function()
+            local cursor
+            local servers = {}
+
+            for page = 1, 10 do
+                local url = "https://games.roblox.com/v1/games/"
+                    .. PlaceId
+                    .. "/servers/Public?sortOrder=Asc&limit=100"
+
+                if cursor and cursor ~= "" then
+                    url = url .. "&cursor="
+                        .. HttpService:UrlEncode(cursor)
+                end
+
+                local response = game:HttpGet(url)
+                local data = HttpService:JSONDecode(response)
+
+                for _, server in ipairs(data.data or {}) do
+                    if server.id ~= game.JobId
+                        and server.playing < server.maxPlayers
+                        and (not onlyOne or server.playing == 1) then
+                        table.insert(servers, server)
+                    end
+                end
+
+                if #servers >= 50 then break end
+                cursor = data.nextPageCursor
+                if not cursor or cursor == "" then break end
+            end
+
+            table.sort(servers, function(a, b)
+                return a.playing < b.playing
+            end)
+
+            for _, server in ipairs(servers) do
+                addServer(server)
+            end
+
+            if #servers == 0 then
+                local Empty = makeLabel(List,
+                    "Khong tim thay server phu hop",
+                    UDim2.new(), UDim2.new(1, -10, 0, 55), 12)
+                setStatus("Khong tim thay server")
+            else
+                setStatus("Da tai " .. #servers .. " server")
+            end
+        end)
+
+        if not success then
+            setStatus("Loi tai server: " .. tostring(err))
+        end
+        loading = false
+    end)
+end
+
+Load.Activated:Connect(loadServers)
+
+-- FIX LAG
+local graphicsOn = false
+
+local function optimize(v)
+    pcall(function()
+        if v:IsA("PostEffect") then
+            v.Enabled = false
+        elseif v:IsA("Atmosphere") then
+            v:Destroy()
+        elseif v:IsA("Clouds") then
+            v.Enabled = false
+        elseif v:IsA("ParticleEmitter")
+            or v:IsA("Trail")
+            or v:IsA("Beam")
+            or v:IsA("Smoke")
+            or v:IsA("Fire")
+            or v:IsA("Sparkles") then
+            v.Enabled = false
+        elseif v:IsA("BasePart") then
+            v.CastShadow = false
+            v.Reflectance = 0
+            v.Material = Enum.Material.Plastic
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v.Transparency = 1
+        elseif v:IsA("SurfaceAppearance") then
+            v:Destroy()
+        end
+
+        if v:IsA("MeshPart") then
+            v.RenderFidelity = Enum.RenderFidelity.Performance
+        end
+    end)
+end
+
+local function fixLag()
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 1000000
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    end)
+
+    for _, v in ipairs(Lighting:GetDescendants()) do
+        optimize(v)
+    end
+
+    for _, v in ipairs(Workspace:GetDescendants()) do
+        optimize(v)
+    end
+
+    pcall(function()
+        local terrain = Workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            terrain.Decoration = false
+            terrain.WaterWaveSize = 0
+            terrain.WaterWaveSpeed = 0
+            terrain.WaterReflectance = 0
+            terrain.WaterTransparency = 1
+        end
+    end)
+end
+
+FixLag.Activated:Connect(function()
+    graphicsOn = true
+    fixLag()
+    FixLag.Text = "⚡ FIX LAG: ON"
+    setStatus("Da giam hieu ung do hoa")
+end)
+
+Workspace.DescendantAdded:Connect(function(obj)
+    if graphicsOn then
+        task.defer(function()
+            if graphicsOn and obj.Parent then
+                optimize(obj)
+            end
+        end)
+    end
+end)
+
+-- REJOIN
+Rejoin.Activated:Connect(function()
+    if teleporting then return end
+    teleporting = true
+    setStatus("Dang rejoin server hien tai...")
+
+    local success, err = pcall(function()
+        TeleportService:TeleportToPlaceInstance(
+            PlaceId, game.JobId, Player)
+    end)
+
+    if not success then
+        teleporting = false
+        setStatus("Rejoin loi: " .. tostring(err))
+    end
+end)
+
+TeleportService.TeleportInitFailed:Connect(function(
+    player, result, errorMessage)
+    if player == Player then
+        teleporting = false
+        setStatus("Teleport loi: " .. tostring(result))
+    end
+end)
+
+setStatus("DUYVN HUB v3 SAN SANG")
